@@ -3,9 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ivi & Cris — Gastos BCP 2026</title>
+<title>Iveth & Cristofer — Gastos TC</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
+  
+  /* ── LOGIN ── */
+  #login-screen {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: #0d1117; display: flex; align-items: center;
+    justify-content: center; z-index: 9999;
+  }
+  .login-card {
+    background: #1a1d27; border-radius: 20px; padding: 2.5rem 2rem;
+    width: 100%; max-width: 320px; text-align: center;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .login-logo { font-size: 2.5rem; margin-bottom: .75rem; }
+  .login-card h2 { color: #e8eaf0; font-size: 1.15rem; font-weight: 600; margin-bottom: 4px; }
+  .login-card p  { color: #6b7280; font-size: 0.82rem; margin-bottom: 1.5rem; }
+  .login-card input {
+    width: 100%; padding: 12px 16px; border-radius: 10px;
+    border: 1.5px solid rgba(255,255,255,0.1); background: #0d1117;
+    color: #e8eaf0; font-size: 1.1rem; text-align: center;
+    letter-spacing: 0.2em; margin-bottom: 1rem; outline: none;
+    font-family: monospace;
+  }
+  .login-card input:focus { border-color: #2a78d6; }
+  .login-card button {
+    width: 100%; padding: 12px; border-radius: 10px; border: none;
+    background: #2a78d6; color: #fff; font-size: 0.95rem;
+    font-weight: 600; cursor: pointer; transition: background .15s;
+  }
+  .login-card button:hover { background: #1a5fb4; }
+  .login-card button:active { transform: scale(0.98); }
+  .login-error { color: #f87171; font-size: 0.82rem; margin-top: 8px; min-height: 20px; }
+
   :root {
     --blue:   #2a78d6;
     --amber:  #eda100;
@@ -164,7 +196,7 @@
 
   <header>
     <div>
-      <h1>Ivi & Cris — Gastos BCP 2026</h1>
+      <h1>Iveth & Cristofer — Gastos TC</h1>
       <p>Período: 11 de cada mes al 10 del siguiente &nbsp;·&nbsp; Meta conjunta: S/ 3,000
          &nbsp;·&nbsp; <span id="last-refresh" style="color:var(--muted)">Cargando...</span></p>
     </div>
@@ -249,9 +281,44 @@
     </div>
   </div>
 
-  <footer>Ivi & Cris &mdash; BCP Control de Gastos 2026 &mdash; actualización automática cada 5 min</footer>
+  <footer>Iveth & Cristofer — Control de Gastos TC 2026 &mdash; actualización automática cada 5 min</footer>
 </div>
 
 <script src="script.js"></script>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">💳</div>
+    <h2>Iveth & Cristofer — Gastos TC</h2>
+    <p>Ingresa la clave para continuar</p>
+    <input type="password" id="pwd-input" placeholder="••••••••"
+           onkeydown="if(event.key==='Enter')checkLogin()" autocomplete="off" />
+    <button onclick="checkLogin()">Entrar</button>
+    <div class="login-error" id="login-error">Clave incorrecta. Intenta de nuevo.</div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const KEY = 'bcp_auth_ivi_cris';
+    const PWD = 'silmat10';
+    if (sessionStorage.getItem(KEY) === '1') {
+      document.getElementById('login-screen').style.display = 'none';
+    }
+  })();
+  function checkLogin() {
+    const val = document.getElementById('pwd-input').value;
+    if (val === 'silmat10') {
+      sessionStorage.setItem('bcp_auth_ivi_cris', '1');
+      document.getElementById('login-screen').style.display = 'none';
+    } else {
+      document.getElementById('login-error').textContent = 'Clave incorrecta. Intenta de nuevo.';
+      document.getElementById('pwd-input').value = '';
+      document.getElementById('pwd-input').focus();
+    }
+  }
+</script>
+
 </body>
 </html>
