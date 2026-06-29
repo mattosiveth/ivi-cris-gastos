@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ivi & Cris — Gastos BCP 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --blue:   #2a78d6;
+    --amber:  #eda100;
+    --red:    #e34948;
+    --green:  #1baf7a;
+    --bg:     #f5f7fa;
+    --card:   #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --text:   #1a1a2e;
+    --muted:  #6b7280;
+    --ivi-bg:  #e8f1fb;
+    --cris-bg: #fef3dc;
+    --ok-bg:   #d1fae5; --ok-text:  #065f46;
+    --warn-bg: #fef3c7; --warn-text: #92400e;
+    --bad-bg:  #fee2e2; --bad-text:  #991b1b;
+    --radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:    #0f1117; --card:  #1a1d27;
+      --border:rgba(255,255,255,0.08);
+      --text:  #e8eaf0; --muted: #9ca3af;
+      --ivi-bg:#0d2a50; --cris-bg:#2d1f00;
+      --ok-bg:  #064e3b; --ok-text:  #6ee7b7;
+      --warn-bg:#451a03; --warn-text:#fcd34d;
+      --bad-bg: #450a0a; --bad-text: #fca5a5;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* Layout */
+  .container { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem; }
+  header { display: flex; align-items: flex-start; justify-content: space-between;
+           margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
+  header h1 { font-size: 1.25rem; font-weight: 600; }
+  header p  { font-size: 0.8rem; color: var(--muted); margin-top: 3px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 6px; }
+  .tab  { padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border);
+          font-size: 0.85rem; cursor: pointer; background: var(--card);
+          color: var(--muted); transition: all .15s; }
+  .tab.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+  /* Filters */
+  .filters { display: flex; gap: 10px; margin-bottom: 1.25rem;
+             flex-wrap: wrap; align-items: center; }
+  .filters label { font-size: 0.8rem; color: var(--muted); }
+  select { font-size: 0.85rem; padding: 6px 10px; border-radius: 8px;
+           border: 1px solid var(--border); background: var(--card);
+           color: var(--text); cursor: pointer; }
+
+  /* KPIs */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+             gap: 10px; margin-bottom: 1.25rem; }
+  .kpi { background: var(--card); border-radius: var(--radius);
+         border: 1px solid var(--border); padding: 1rem; }
+  .kpi-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase;
+               letter-spacing: .05em; margin-bottom: 4px; }
+  .kpi-val  { font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .kpi-sub  { font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
+  .kpi-ok   { background: var(--ok-bg);  border-color: transparent; }
+  .kpi-ok   .kpi-val { color: var(--ok-text); }
+  .kpi-warn { background: var(--warn-bg); border-color: transparent; }
+  .kpi-warn .kpi-val { color: var(--warn-text); }
+  .kpi-danger { background: var(--bad-bg); border-color: transparent; }
+  .kpi-danger .kpi-val { color: var(--bad-text); }
+  .kpi-ivi  { border-left: 3px solid var(--blue); }
+  .kpi-cris { border-left: 3px solid var(--amber); }
+
+  /* Semáforo */
+  .semaforo { display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+              border-radius: 8px; margin-bottom: 1.25rem;
+              font-size: 0.875rem; font-weight: 500; }
+  .sem-ok     { background: var(--ok-bg);   color: var(--ok-text); }
+  .sem-warn   { background: var(--warn-bg); color: var(--warn-text); }
+  .sem-danger { background: var(--bad-bg);  color: var(--bad-text); }
+
+  /* Cards */
+  .card { background: var(--card); border-radius: var(--radius);
+          border: 1px solid var(--border); padding: 1.25rem;
+          margin-bottom: 1.25rem; }
+  .card-title { font-size: 0.85rem; font-weight: 500; color: var(--muted); margin-bottom: 1rem; }
+
+  /* Legend */
+  .legend { display: flex; gap: 16px; margin-bottom: .75rem; flex-wrap: wrap; }
+  .leg-item { display: flex; align-items: center; gap: 5px;
+              font-size: 0.78rem; color: var(--muted); }
+  .leg-sq { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .leg-line { width: 16px; height: 3px; border-radius: 0; flex-shrink: 0; }
+
+  /* Month grid */
+  .section-title { font-size: 0.85rem; font-weight: 500; color: var(--muted);
+                   margin-bottom: .75rem; }
+  .month-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+                gap: 8px; margin-bottom: 1.25rem; }
+  .month-card { background: var(--card); border-radius: var(--radius);
+                border: 1.5px solid var(--border); padding: .85rem 1rem;
+                cursor: pointer; transition: border-color .15s; }
+  .month-card:hover    { border-color: var(--blue); }
+  .month-card.selected { border-color: var(--blue); background: var(--ivi-bg); }
+  .mc-name  { font-size: 0.8rem; font-weight: 600; }
+  .mc-label { font-size: 0.7rem; font-weight: 400; color: var(--muted); }
+  .mc-total { font-size: 1.15rem; font-weight: 600; margin: .25rem 0; }
+  .mc-bar-bg   { height: 5px; background: var(--bg); border-radius: 3px;
+                 overflow: hidden; margin: .4rem 0; }
+  .mc-bar-fill { height: 100%; border-radius: 3px; }
+  .mc-meta { font-size: 0.72rem; color: var(--muted);
+             display: flex; justify-content: space-between; }
+
+  /* Tables */
+  .cat-table { width: 100%; border-collapse: collapse; }
+  .cat-table th { font-size: 0.75rem; color: var(--muted); font-weight: 500;
+                  text-align: left; padding: 0 8px 8px; }
+  .cat-table td { font-size: 0.85rem; padding: 7px 8px;
+                  border-top: 1px solid var(--border); }
+  .cat-table td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+  .td-bold  { font-weight: 600; }
+  .td-ivi   { color: var(--blue); }
+  .td-cris  { color: var(--amber); }
+  .tr-total td { font-weight: 600; border-top: 2px solid var(--border); }
+  .bar-mini { display: flex; gap: 3px; height: 14px; align-items: center; }
+  .bar-seg  { border-radius: 2px; height: 10px; }
+  .bar-pct  { font-size: 0.72rem; color: var(--muted); }
+  .muted    { color: var(--muted); }
+
+  /* Loading */
+  #loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+             background: rgba(0,0,0,.4); display: flex; align-items: center;
+             justify-content: center; z-index: 100; display: none; }
+  .spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,.3);
+             border-top-color: #fff; border-radius: 50%;
+             animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #error-msg { display: none; background: var(--bad-bg); color: var(--bad-text);
+               padding: 12px 16px; border-radius: 8px; margin-bottom: 1rem;
+               font-size: 0.875rem; }
+
+  /* Footer */
+  footer { text-align: center; font-size: 0.75rem; color: var(--muted);
+           padding: 1rem 0 2rem; }
+
+  @media (max-width: 600px) {
+    .kpi-val { font-size: 1.2rem; }
+    header { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spinner"></div></div>
+
+<div class="container" id="app" data-view="mes">
+
+  <header>
+    <div>
+      <h1>Ivi & Cris — Gastos BCP 2026</h1>
+      <p>Período: 11 de cada mes al 10 del siguiente &nbsp;·&nbsp; Meta conjunta: S/ 3,000
+         &nbsp;·&nbsp; <span id="last-refresh" style="color:var(--muted)">Cargando...</span></p>
+    </div>
+    <div class="tabs">
+      <button class="tab active" id="tab-mes" onclick="setView('mes')">Vista mensual</button>
+      <button class="tab"        id="tab-evo" onclick="setView('evolutivo')">Evolutivo anual</button>
+    </div>
+  </header>
+
+  <div id="error-msg">
+    No se pudieron cargar los datos. Verifica que la URL del Google Sheet esté publicada correctamente en <code>script.js</code>.
+  </div>
+
+  <div class="filters" id="filters-mes">
+    <label>Ver:</label>
+    <select id="sel-titular" onchange="renderAll()">
+      <option value="ambos">Ivi + Cris</option>
+      <option value="Ivi">Solo Ivi</option>
+      <option value="Cris">Solo Cris</option>
+    </select>
+    <select id="sel-cat" onchange="renderAll()">
+      <option value="todas">Todas las categorías</option>
+    </select>
+    <select id="sel-mes" onchange="renderAll()"></select>
+    <button onclick="fetchData()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:0.85rem;">
+      &#8635; Actualizar
+    </button>
+  </div>
+
+  <div id="kpis" class="kpi-row"></div>
+  <div id="semaforo" class="semaforo sem-ok"></div>
+
+  <!-- VISTA MENSUAL -->
+  <div id="view-mes">
+    <div class="card">
+      <div class="card-title" id="chart-mes-title"></div>
+      <div class="legend">
+        <span class="leg-item"><span class="leg-sq" style="background:#2a78d6"></span>Ivi (****3012)</span>
+        <span class="leg-item"><span class="leg-sq" style="background:#eda100"></span>Cris (****3912)</span>
+        <span class="leg-item"><span class="leg-line" style="background:#e34948"></span>Meta S/ 3,000</span>
+      </div>
+      <div style="position:relative;width:100%;height:280px">
+        <canvas id="chart-mes" role="img" aria-label="Gráfico de gastos del mes por categoría"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" id="detail-title">Desglose por categoría</div>
+      <table class="cat-table">
+        <thead><tr>
+          <th>Categoría</th><th>Ivi</th><th>Cris</th><th>Total</th>
+          <th style="width:110px">Distribución</th>
+        </tr></thead>
+        <tbody id="cat-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- VISTA EVOLUTIVO -->
+  <div id="view-evo" style="display:none">
+    <div class="card">
+      <div class="card-title">Gasto conjunto vs meta — todos los períodos 2026</div>
+      <div class="legend">
+        <span class="leg-item"><span class="leg-sq" style="background:#2a78d6"></span>Ivi (****3012)</span>
+        <span class="leg-item"><span class="leg-sq" style="background:#eda100"></span>Cris (****3912)</span>
+        <span class="leg-item"><span class="leg-line" style="background:#e34948"></span>Meta S/ 3,000</span>
+      </div>
+      <div style="position:relative;width:100%;height:300px">
+        <canvas id="chart-evo" role="img" aria-label="Evolutivo anual de gastos Ivi y Cris vs meta"></canvas>
+      </div>
+    </div>
+    <div class="section-title">Haz clic en cualquier mes para ver el desglose</div>
+    <div class="month-grid" id="month-grid"></div>
+    <div class="card" id="evo-detail" style="display:none">
+      <div class="card-title" id="evo-detail-title"></div>
+      <table class="cat-table">
+        <thead><tr>
+          <th>Categoría</th><th>Ivi</th><th>Cris</th><th>Total</th>
+          <th style="width:110px">Distribución</th>
+        </tr></thead>
+        <tbody id="evo-cat-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>Ivi & Cris &mdash; BCP Control de Gastos 2026 &mdash; actualización automática cada 5 min</footer>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
