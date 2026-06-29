@@ -5,7 +5,7 @@
 const CONFIG = {
   // Paso 1: Publica tu Sheet como CSV y pega el link aquí
   // Archivo → Compartir → Publicar en la web → hoja "📋 Registro" → CSV
-  SHEET_CSV_URL: 'TU_LINK_CSV_AQUI',   // <- unico dato que falta
+  SHEET_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ_tYgI3pUr0m6hRGPTvdR1sjnK0aLxkxBJAM1esj0xyUm3_wLrNzbgLJGNOy6AxT_fm8jnlAlzxJeB/pub?gid=1962378565&single=true&output=csv',   // <- unico dato que falta
 
   META: 3000,
   IVI_CARD: '3012',
