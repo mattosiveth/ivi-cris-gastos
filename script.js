@@ -36,7 +36,7 @@ const PERIODOS = [
 const CATS = ['Alimentación','Transporte','Entretenimiento','Salud','Servicios Básicos',
               'Educación','Ropa','Compras Online','Restaurantes','Viajes','Hogar','Otros'];
 
-const BLUE = '#2a78d6', AMBER = '#eda100', RED = '#e34948', GREEN = '#1baf7a';
+const FUCHSIA = '#d6336c', BLUE = '#2a78d6', RED = '#e34948', GREEN = '#1baf7a';
 
 // ═══════════════════════════════════════════════════════════
 // DATA LAYER — lee CSV de Google Sheets
@@ -161,12 +161,12 @@ function renderKpis(txns) {
     </div>
     <div class="kpi kpi-ivi">
       <div class="kpi-label">Ivi (****${CONFIG.IVI_CARD})</div>
-      <div class="kpi-val" style="color:${BLUE}">${fmtS(iviT)}</div>
+      <div class="kpi-val" style="color:${FUCHSIA}">${fmtS(iviT)}</div>
       <div class="kpi-sub">${fmtPct(total > 0 ? iviT/total : 0)} del total</div>
     </div>
     <div class="kpi kpi-cris">
       <div class="kpi-label">Cris (****${CONFIG.CRIS_CARD})</div>
-      <div class="kpi-val" style="color:${AMBER}">${fmtS(crisT)}</div>
+      <div class="kpi-val" style="color:${BLUE}">${fmtS(crisT)}</div>
       <div class="kpi-sub">${fmtPct(total > 0 ? crisT/total : 0)} del total</div>
     </div>`;
 
@@ -219,8 +219,8 @@ function renderMes() {
     data: {
       labels: filtered.map(c => c.length > 12 ? c.slice(0,11)+'…' : c),
       datasets: [
-        { label: 'Ivi',  data: iviVals,  backgroundColor: BLUE+'cc',  borderRadius: 3, stack: 's' },
-        { label: 'Cris', data: crisVals, backgroundColor: AMBER+'cc', borderRadius: 3, stack: 's' },
+        { label: 'Ivi',  data: iviVals,  backgroundColor: FUCHSIA+'cc',  borderRadius: 3, stack: 's' },
+        { label: 'Cris', data: crisVals, backgroundColor: BLUE+'cc', borderRadius: 3, stack: 's' },
       ]
     },
     options: {
@@ -264,8 +264,8 @@ function renderEvolutivo() {
     data: {
       labels: PERIODOS.map(p => p.mes),
       datasets: [
-        { label: 'Ivi',  data: iviTots,  backgroundColor: BLUE+'cc',  borderRadius: 3, stack: 's' },
-        { label: 'Cris', data: crisTots, backgroundColor: AMBER+'cc', borderRadius: 3, stack: 's' },
+        { label: 'Ivi',  data: iviTots,  backgroundColor: FUCHSIA+'cc',  borderRadius: 3, stack: 's' },
+        { label: 'Cris', data: crisTots, backgroundColor: BLUE+'cc', borderRadius: 3, stack: 's' },
         { label: 'Meta', data: PERIODOS.map(() => CONFIG.META),
           type: 'line', borderColor: RED, borderWidth: 2,
           borderDash: [6,3], pointRadius: 0, fill: false, stack: undefined, order: 0 },
@@ -300,7 +300,7 @@ function renderMonthGrid(iviTots, crisTots) {
   PERIODOS.forEach((p, i) => {
     const tot = iviTots[i] + crisTots[i];
     const pct = Math.min(tot / CONFIG.META, 1);
-    const barColor = tot > CONFIG.META ? RED : tot > CONFIG.META * .85 ? AMBER : BLUE;
+    const barColor = tot > CONFIG.META ? RED : tot > CONFIG.META * .85 ? BLUE : FUCHSIA;
     const isEmpty = tot === 0;
     const card = document.createElement('div');
     card.className = 'month-card';
@@ -309,8 +309,8 @@ function renderMonthGrid(iviTots, crisTots) {
       <div class="mc-total">${isEmpty ? '—' : fmtS(tot)}</div>
       <div class="mc-bar-bg"><div class="mc-bar-fill" style="width:${Math.round(pct*100)}%;background:${barColor}"></div></div>
       <div class="mc-meta">
-        <span style="color:${BLUE}">Ivi ${fmtS(iviTots[i])}</span>
-        <span style="color:${AMBER}">Cris ${fmtS(crisTots[i])}</span>
+        <span style="color:${FUCHSIA}">Ivi ${fmtS(iviTots[i])}</span>
+        <span style="color:${BLUE}">Cris ${fmtS(crisTots[i])}</span>
         ${!isEmpty ? `<span style="color:${tot>CONFIG.META?RED:GREEN}">${fmtPct(pct)}</span>` : '<span class="muted">sin datos</span>'}
       </div>`;
     card.onclick = () => selectEvoMonth(i, iviTots, crisTots);
@@ -351,7 +351,7 @@ function renderCatTable(txns, tbodyId) {
       <td class="td-cris">${fmtS(cris)}</td>
       <td class="td-bold">${fmtS(tot)}</td>
       <td><div class="bar-mini">
-        <div class="bar-seg" style="background:${BLUE};width:${Math.round(pct*80)}px"></div>
+        <div class="bar-seg" style="background:${FUCHSIA};width:${Math.round(pct*80)}px"></div>
         <span class="bar-pct">${fmtPct(pct)}</span>
       </div></td>
     </tr>`;
@@ -371,17 +371,148 @@ function renderCatTable(txns, tbodyId) {
 function renderAll() {
   const view = document.getElementById('app').dataset.view || 'mes';
   if (view === 'mes') renderMes();
-  else renderEvolutivo();
+  else if (view === 'evolutivo') renderEvolutivo();
+  else if (view === 'diario') renderDiario();
 }
 
 function setView(v) {
   document.getElementById('app').dataset.view = v;
   document.getElementById('view-mes').style.display = v==='mes' ? 'block' : 'none';
   document.getElementById('view-evo').style.display = v==='evolutivo' ? 'block' : 'none';
+  document.getElementById('view-dia').style.display = v==='diario' ? 'block' : 'none';
   document.getElementById('filters-mes').style.display = v==='mes' ? 'flex' : 'none';
   document.getElementById('tab-mes').classList.toggle('active', v==='mes');
   document.getElementById('tab-evo').classList.toggle('active', v==='evolutivo');
-  renderAll();
+  document.getElementById('tab-dia').classList.toggle('active', v==='diario');
+  if (v === 'diario') {
+    if (!document.getElementById('sel-fecha').value) irHoy();
+    else renderDiario();
+  } else {
+    renderAll();
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// VISTA DETALLE DIARIO
+// ═══════════════════════════════════════════════════════════
+const CAT_COLORS = {
+  'Alimentación':      { bg: '#fef3dc', text: '#92400e' },
+  'Transporte':        { bg: '#e0f2fe', text: '#075985' },
+  'Entretenimiento':   { bg: '#f3e8ff', text: '#6b21a8' },
+  'Salud':             { bg: '#fee2e2', text: '#991b1b' },
+  'Servicios Básicos': { bg: '#e0e7ff', text: '#3730a3' },
+  'Educación':         { bg: '#ecfccb', text: '#3f6212' },
+  'Ropa':              { bg: '#fce7f3', text: '#9d174d' },
+  'Compras Online':    { bg: '#cffafe', text: '#155e63' },
+  'Restaurantes':      { bg: '#ffedd5', text: '#9a3412' },
+  'Viajes':            { bg: '#dbeafe', text: '#1e3a8a' },
+  'Hogar':             { bg: '#d1fae5', text: '#065f46' },
+  'Otros':             { bg: '#f3f4f6', text: '#374151' },
+};
+
+function irHoy() {
+  const hoy = new Date();
+  const yyyy = hoy.getFullYear();
+  const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+  const dd = String(hoy.getDate()).padStart(2, '0');
+  document.getElementById('sel-fecha').value = `${yyyy}-${mm}-${dd}`;
+  renderDiario();
+}
+
+function cambiarDia(delta) {
+  const input = document.getElementById('sel-fecha');
+  const fecha = new Date(input.value + 'T12:00:00');
+  fecha.setDate(fecha.getDate() + delta);
+  const yyyy = fecha.getFullYear();
+  const mm = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dd = String(fecha.getDate()).padStart(2, '0');
+  input.value = `${yyyy}-${mm}-${dd}`;
+  renderDiario();
+}
+
+function parseFechaTxn(fechaHoraStr) {
+  // Formato esperado: "DD/MM/YYYY HH:MM"
+  const [fecha, hora] = fechaHoraStr.split(' ');
+  if (!fecha) return null;
+  const [dd, mm, yyyy] = fecha.split('/');
+  if (!dd || !mm || !yyyy) return null;
+  return { dd, mm, yyyy, hora: hora || '' };
+}
+
+function renderDiario() {
+  const fechaSel = document.getElementById('sel-fecha').value; // "YYYY-MM-DD"
+  if (!fechaSel) return;
+  const [yyyy, mm, dd] = fechaSel.split('-');
+
+  const txnsDia = ALL_TXNS.filter(t => {
+    const f = parseFechaTxn(t.fechaHora);
+    return f && f.dd === dd && f.mm === mm && f.yyyy === yyyy;
+  });
+
+  // Título legible
+  const fechaObj = new Date(fechaSel + 'T12:00:00');
+  const opciones = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+  const fechaLegible = fechaObj.toLocaleDateString('es-PE', opciones);
+  document.getElementById('dia-title').textContent =
+    'Transacciones — ' + fechaLegible.charAt(0).toUpperCase() + fechaLegible.slice(1);
+
+  // KPIs del día
+  const totalDia = txnsDia.reduce((a,t) => a + t.montoSoles, 0);
+  const iviDia  = txnsDia.filter(t => t.titular === 'Ivi').reduce((a,t) => a + t.montoSoles, 0);
+  const crisDia = txnsDia.filter(t => t.titular === 'Cris').reduce((a,t) => a + t.montoSoles, 0);
+
+  document.getElementById('day-kpis').innerHTML = `
+    <div class="kpi" style="flex:1;min-width:140px">
+      <div class="kpi-label">Total del día</div>
+      <div class="kpi-val">${fmtS(totalDia)}</div>
+      <div class="kpi-sub">${txnsDia.length} transacción${txnsDia.length !== 1 ? 'es' : ''}</div>
+    </div>
+    <div class="kpi kpi-ivi" style="flex:1;min-width:140px">
+      <div class="kpi-label">Ivi</div>
+      <div class="kpi-val" style="color:${FUCHSIA}">${fmtS(iviDia)}</div>
+      <div class="kpi-sub">${txnsDia.filter(t=>t.titular==='Ivi').length} transacciones</div>
+    </div>
+    <div class="kpi kpi-cris" style="flex:1;min-width:140px">
+      <div class="kpi-label">Cris</div>
+      <div class="kpi-val" style="color:${BLUE}">${fmtS(crisDia)}</div>
+      <div class="kpi-sub">${txnsDia.filter(t=>t.titular==='Cris').length} transacciones</div>
+    </div>
+  `;
+
+  const tabla = document.getElementById('txn-table');
+  const vacio = document.getElementById('empty-day');
+  const tbody = document.getElementById('txn-tbody');
+
+  if (txnsDia.length === 0) {
+    tabla.style.display = 'none';
+    vacio.style.display = 'block';
+    return;
+  }
+
+  tabla.style.display = 'table';
+  vacio.style.display = 'none';
+
+  // Ordenar por hora descendente
+  txnsDia.sort((a,b) => {
+    const fa = parseFechaTxn(a.fechaHora), fb = parseFechaTxn(b.fechaHora);
+    return (fb?.hora || '').localeCompare(fa?.hora || '');
+  });
+
+  tbody.innerHTML = txnsDia.map(t => {
+    const colors = CAT_COLORS[t.categoria] || CAT_COLORS['Otros'];
+    const dotColor = t.titular === 'Ivi' ? FUCHSIA : BLUE;
+    const montoTxt = t.moneda !== 'PEN'
+      ? `${fmtS(t.montoSoles)} <span style="color:var(--muted);font-weight:400;font-size:0.75rem">(${t.moneda} ${t.montoOrig.toFixed(2)})</span>`
+      : fmtS(t.montoSoles);
+    return `<tr>
+      <td class="txn-time">${parseFechaTxn(t.fechaHora)?.hora || '—'}</td>
+      <td class="txn-empresa">${t.empresa}${t.subcategoria ? '<br><span style="font-size:0.72rem;color:var(--muted);font-weight:400">'+t.subcategoria+'</span>' : ''}</td>
+      <td><span class="txn-cat-badge" style="background:${colors.bg};color:${colors.text}">${t.categoria || 'Sin categoría'}</span></td>
+      <td><span class="txn-titular-dot" style="background:${dotColor}"></span>${t.titular}</td>
+      <td class="txn-amount">${montoTxt}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════
