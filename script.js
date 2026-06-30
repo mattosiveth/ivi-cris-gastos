@@ -338,29 +338,37 @@ function renderCatTable(txns, tbodyId) {
   const tbody = document.getElementById(tbodyId);
   tbody.innerHTML = '';
   let gIvi = 0, gCris = 0;
-  CATS.forEach(c => {
+
+  // Ordenar categorías por monto total descendente para mejor lectura
+  const filas = CATS.map(c => {
     const iv   = Math.round(txns.filter(t => t.titular==='Ivi'  && t.categoria===c).reduce((a,t)=>a+t.montoSoles,0));
     const cris = Math.round(txns.filter(t => t.titular==='Cris' && t.categoria===c).reduce((a,t)=>a+t.montoSoles,0));
-    const tot  = iv + cris;
-    if (!tot) return;
-    gIvi += iv; gCris += cris;
-    const pct = total > 0 ? tot/total : 0;
+    return { cat: c, iv, cris, tot: iv + cris };
+  }).filter(f => f.tot > 0).sort((a,b) => b.tot - a.tot);
+
+  filas.forEach(f => {
+    gIvi += f.iv; gCris += f.cris;
+    const pct = total > 0 ? f.tot/total : 0;
+    const colorBar = (CAT_COLORS[f.cat] || CAT_COLORS['Otros']).text;
     tbody.innerHTML += `<tr>
-      <td class="td-bold">${c}</td>
-      <td class="td-ivi">${fmtS(iv)}</td>
-      <td class="td-cris">${fmtS(cris)}</td>
-      <td class="td-bold">${fmtS(tot)}</td>
-      <td><div class="bar-mini">
-        <div class="bar-seg" style="background:${FUCHSIA};width:${Math.round(pct*80)}px"></div>
-        <span class="bar-pct">${fmtPct(pct)}</span>
-      </div></td>
+      <td><div class="cat-name"><span class="cat-dot" style="background:${colorBar}"></span>${f.cat}</div></td>
+      <td class="td-amount td-ivi">${f.iv > 0 ? fmtS(f.iv) : '<span class="muted">—</span>'}</td>
+      <td class="td-amount td-cris">${f.cris > 0 ? fmtS(f.cris) : '<span class="muted">—</span>'}</td>
+      <td class="td-amount td-bold">${fmtS(f.tot)}</td>
+      <td>
+        <div class="dist-cell">
+          <div class="bar-mini"><div class="bar-seg" style="background:${colorBar};width:${Math.round(pct*100)}%"></div></div>
+          <span class="bar-pct">${fmtPct(pct)}</span>
+        </div>
+      </td>
     </tr>`;
   });
+
   tbody.innerHTML += `<tr class="tr-total">
     <td>Total</td>
-    <td class="td-ivi">${fmtS(gIvi)}</td>
-    <td class="td-cris">${fmtS(gCris)}</td>
-    <td>${fmtS(gIvi+gCris)}</td>
+    <td class="td-amount td-ivi">${fmtS(gIvi)}</td>
+    <td class="td-amount td-cris">${fmtS(gCris)}</td>
+    <td class="td-amount">${fmtS(gIvi+gCris)}</td>
     <td></td>
   </tr>`;
 }
