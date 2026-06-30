@@ -10,7 +10,7 @@ const CONFIG = {
   META: 3000,
   IVI_CARD: '3012',
   CRIS_CARD: '3912',
-  PERIODO_ACTUAL: 'Jun 11 - Jul 10',   // periodo activo — actualizar cada mes
+  PERIODO_ACTUAL: 'Jun 11 - Jul 10',   // ya no requiere edicion -- se calcula solo segun la fecha de hoy
   REFRESH_MS: 5 * 60 * 1000,
   DASHBOARD_URL: 'https://mattosiveth.github.io/ivi-cris-gastos',
 };
@@ -36,7 +36,7 @@ const PERIODOS = [
 const CATS = ['Alimentación','Transporte','Entretenimiento','Salud','Servicios Básicos',
               'Educación','Ropa','Compras Online','Restaurantes','Viajes','Hogar','Otros'];
 
-const FUCHSIA = '#d6336c', BLUE = '#2a78d6', RED = '#e34948', GREEN = '#1baf7a';
+const FUCHSIA = '#ec79a3', BLUE = '#1877f2', RED = '#e34948', GREEN = '#1baf7a';
 
 // ═══════════════════════════════════════════════════════════
 // DATA LAYER — lee CSV de Google Sheets
@@ -516,18 +516,45 @@ function renderDiario() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// PERÍODO ACTUAL — calculado según la fecha de hoy (11 → 10)
+// ═══════════════════════════════════════════════════════════
+function calcularIndicePeriodoActual() {
+  const hoy = new Date();
+  const dia = hoy.getDate();
+  const mes = hoy.getMonth() + 1; // 1-12
+  const anio = hoy.getFullYear();
+
+  let mesInicio;
+  if (dia <= 10) {
+    mesInicio = mes === 1 ? 12 : mes - 1;
+  } else {
+    mesInicio = mes;
+  }
+
+  const MESES_ABREV = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const labelBuscado = MESES_ABREV[mesInicio] + ' 11';
+
+  const idx = PERIODOS.findIndex(p => p.label.indexOf(labelBuscado) === 0);
+  return idx >= 0 ? idx : 5;
+}
+
+// ═══════════════════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+  const indiceActual = calcularIndicePeriodoActual();
+
   // Populate month selector
   const selMes = document.getElementById('sel-mes');
   PERIODOS.forEach((p, i) => {
     const opt = document.createElement('option');
     opt.value = i;
     opt.textContent = p.mes + ' (' + p.label + ')';
-    if (i === 5) opt.selected = true;
+    if (i === indiceActual) opt.selected = true;
     selMes.appendChild(opt);
   });
+  selectedMesIdx = indiceActual;
+
   // Populate category selector
   const selCat = document.getElementById('sel-cat');
   CATS.forEach(c => {
